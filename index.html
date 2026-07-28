@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>ระบบส่งงานนักเรียน @ โรงเรียนปากช่อง | 2569</title>
+    <link rel="icon" type="image/x-icon" href="Logo.png">
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* ป้องกันการเลื่อนหน้าจอขณะโหลด */
+        }
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        } 
+        /* สร้าง Class ส่วนกลางสำหรับจัดกึ่งกลาง */
+        .full-screen-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #ffffff;
+            z-index: 9999;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- หน้าแจ้งเตือน Facebook (ปรับให้ใช้ class กึ่งกลาง) -->
+    <div id="FBloading" class="full-screen-center" style="display:none;">
+        <h4 style="font-family: 'Sarabun', sans-serif; line-height: 1.6;">
+            โปรดเปิดด้วย เบราว์เซอร์ภายนอก <br>
+            <span style="color: #666; font-size: 0.9em;">Please open in external browser.</span>
+        </h4>       
+    </div>  
+
+    <!-- หน้า Loading หลัก -->
+    <div id="loading" class="full-screen-center" style="transition: opacity 0.5s ease-out;">
+        <dotlottie-player src="https://lottie.host/3924723b-b000-47d9-877a-48fc904e0c67/UiIOpIdURz.lottie" 
+            background="transparent" speed="1" style="width: 300px; height: 300px" loop autoplay>
+        </dotlottie-player>
+        <h4 style="color: #333; font-family: 'Sarabun', sans-serif; font-weight: bold; margin-top: 20px;">
+            กำลังตรวจสอบความปลอดภัย
+        </h4>
+        <!-- ลิงก์สำรองแบบกดเอง (ซ่อนไว้ก่อน โผล่เมื่อรอนานเกินไป) -->
+        <a id="directLink" href="#" target="_top"
+            style="display:none; margin-top:18px; color:#1d4ed8; font-family:'Sarabun',sans-serif; font-size:0.95em; text-decoration:underline;">
+            ถ้าหน้าไม่แสดง คลิกที่นี่เพื่อเปิดโดยตรง
+        </a>
+    </div>
+
+    <!-- iframe หลักสำหรับแสดงระบบ (ซ่อนไว้จนกว่าจะโหลดสำเร็จ) -->
+    <iframe id="link" style="display:none" scrolling="auto" src=""></iframe>
+
+    <script type="text/javascript">
+        let preloader = document.getElementById("loading");
+        let FBloading = document.getElementById("FBloading");
+        let link = document.getElementById("link");
+        let directLink = document.getElementById("directLink");
+        let idUID = window.location.search;
+        let param = new URLSearchParams(idUID);
+        let id = param.get('fbclid');
+        let idApply = param.get('id');
+        
+        function getNoCacheUrl(baseUrl, params = "") {
+            let sep = baseUrl.includes('?') ? '&' : '?';
+            return baseUrl + params + sep + "t=" + new Date().getTime();
+        }
+
+        const baseAppScript = "https://script.google.com/a/macros/pcschool.ac.th/s/AKfycbydnWQiFsB0svp7twIDDREOiJP4r77_H_rjFFIYlKrmbuOYKgbXrNvHxMj_y7tRTG-J/exec";
+
+        // ฟังก์ชันช่วยปิด Loading แบบนิ่มนวล
+        function hideLoader() {
+            preloader.style.opacity = '0';
+            setTimeout(() => {
+                preloader.style.display = 'none';
+            }, 500);
+        }
+
+        if(id){
+            preloader.style.display = 'none';
+            FBloading.style.display = 'flex'; // ใช้ flex เพื่อให้กึ่งกลาง
+            // ... (โค้ดหน่วงเวลาเดิมของคุณ) ...
+            let countDownDate = new Date(Date.now() + 15000).getTime();   	
+            let x = setTimeout(function(){
+                let now = new Date().getTime();
+                let distance = countDownDate - now;                
+                let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                if(seconds == 13){
+                    FBloading.innerHTML = `<iframe scrolling="auto" src="openExternalBrowser.mp4"></iframe>`
+                } else if(seconds <= 0){
+                    clearInterval(x);
+                    window.location.href = 'https://pcschool-dev.github.io/homework'
+                }  				
+            }, 1000); // ทุก ๆ 1 วิ
+        
+        } else {
+            let finalUrl = idApply ? getNoCacheUrl(baseAppScript, `?id=${idApply}`) : getNoCacheUrl(baseAppScript);
+
+            let settled = false;
+
+            // สำรอง: ถ้าฝังใน iframe ไม่ได้ (เช่น โดน X-Frame-Options: SAMEORIGIN
+            // ตอน Google เด้งไปหน้า login) onload จะไม่ยิงภายในเวลาที่กำหนด
+            // -> เปลี่ยนไปเปิดลิงก์ /exec ตรง ๆ ทั้งแท็บ เพื่อให้ล็อกอิน/ใช้งานต่อได้
+            let fallbackTimer = setTimeout(function () {
+                if (settled) return;
+                settled = true;
+                window.location.replace(finalUrl);
+            }, 6000); // เวลารอ iframe ก่อนตัดสินใจ fallback (มิลลิวินาที) — ปรับได้
+
+            // ใช้ iframe เป็นหลัก: ถ้าโหลดในกรอบสำเร็จ -> ยกเลิก fallback แล้วแสดงเต็มจอ
+            link.onload = function () {
+                if (settled) return;
+                settled = true;
+                clearTimeout(fallbackTimer);
+                hideLoader();
+                link.style.display = 'block';
+            };
+
+            link.src = finalUrl;
+
+            // ลิงก์สำรองแบบกดเอง — โผล่ขึ้นถ้ารอนานเกินไป (ตาข่ายกันพลาด
+            // เผื่อบางเบราว์เซอร์ตรวจการบล็อก iframe อัตโนมัติไม่ได้)
+            directLink.href = finalUrl;
+            setTimeout(function () {
+                if (!settled) directLink.style.display = 'inline-block';
+            }, 3000); // เวลาโผล่ลิงก์สำรอง (มิลลิวินาที) — ปรับได้
+        }
+    </script>
+</body>    
+</html>
